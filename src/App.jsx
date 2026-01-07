@@ -1,5 +1,5 @@
 import React from "react";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useUsers } from "./hooks/useUsers";
 import toast from "react-hot-toast";
 
@@ -18,9 +18,9 @@ function App() {
   const { users, setUsers, loading, error } = useUsers();
 
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [confirmUserId, setConfirmUserId] = useState(null);
 
   const filteredUsers = useMemo(() => {
@@ -33,19 +33,20 @@ function App() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [users, search]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search]);
-
   const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
-
   const paginatedUsers = filteredUsers.slice(
     (currentPage - 1) * USERS_PER_PAGE,
     currentPage * USERS_PER_PAGE
   );
 
+  // ✅ reset page inside handler (not useEffect)
+  const handleSearchChange = (value) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
+
   const handleAdd = (user) => {
-    setUsers([user, ...users]);
+    setUsers((prev) => [user, ...prev]);
     toast.success("User added successfully");
   };
 
@@ -59,14 +60,15 @@ function App() {
       setEditingUser(null);
       return;
     }
-
-    setUsers(users.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
+    setUsers((prev) =>
+      prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
+    );
     setEditingUser(null);
     toast.success("User updated successfully");
   };
 
   const handleDelete = () => {
-    setUsers(users.filter((u) => u.id !== confirmUserId));
+    setUsers((prev) => prev.filter((u) => u.id !== confirmUserId));
     setConfirmUserId(null);
     toast.success("User deleted successfully");
   };
@@ -74,9 +76,8 @@ function App() {
   if (loading) return <Loader />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+    <div className="min-h-screen bg-linear-to-br from-indigo-50 via-white to-cyan-50">
       <div className="max-w-7xl mx-auto px-4 py-10 space-y-8">
-        {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold text-gray-800">
             User Directory
@@ -89,13 +90,14 @@ function App() {
         {error && <ErrorMessage message={error} />}
 
         <AddUserForm
+          key={editingUser?.id || "new"}
           users={users}
           editingUser={editingUser}
           onAdd={handleAdd}
           onUpdate={handleUpdate}
         />
 
-        <SearchBar value={search} onChange={setSearch} />
+        <SearchBar value={search} onChange={handleSearchChange} />
 
         <UserList
           users={paginatedUsers}

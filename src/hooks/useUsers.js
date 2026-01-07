@@ -1,35 +1,38 @@
 import React from "react";
 import { useEffect, useState } from "react";
-import { fetchUsers } from "../services/api";
 
 export const useUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const cached = localStorage.getItem("users");
+    const loadUsers = async () => {
+      try {
+        const cached = localStorage.getItem("users");
+        if (cached) {
+          setUsers(JSON.parse(cached));
+          setLoading(false);
+          return;
+        }
 
-    if (cached) {
-      setUsers(JSON.parse(cached));
-      setLoading(false);
-      return;
-    }
+        const res = await fetch(
+          "https://jsonplaceholder.typicode.com/users"
+        );
+        if (!res.ok) throw new Error("Failed to fetch users");
 
-    fetchUsers()
-      .then((data) => {
+        const data = await res.json();
         setUsers(data);
         localStorage.setItem("users", JSON.stringify(data));
-      })
-      .catch(() => setError("Failed to fetch users"))
-      .finally(() => setLoading(false));
-  }, []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  useEffect(() => {
-    if (users.length) {
-      localStorage.setItem("users", JSON.stringify(users));
-    }
-  }, [users]);
+    loadUsers();
+  }, []);
 
   return { users, setUsers, loading, error };
 };
