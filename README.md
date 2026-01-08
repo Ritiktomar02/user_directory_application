@@ -21,21 +21,21 @@ This project focuses on clean React fundamentals, state management, and user-fri
    cd user-directory-app
    
 3. Install dependencies:
- ```bash
+   ```bash
    npm install
-```
+   ```
 ---
 
 ## How to Run the Project
 
 Start the development server:
-```bash
-npm run dev
-```
+   ```bash
+   npm run dev
+   ```
 The application will be available at:
-```bash
-http://localhost:5173
-```
+   ```bash
+   user-directory-application.vercel.app/
+   ```
 ---
 
 ## ✨ Features Implemented
